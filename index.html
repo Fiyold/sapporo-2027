@@ -74,7 +74,7 @@ footer{padding:30px 16px 50px;color:var(--sub);font-size:12px;text-align:center}
   <div class="chips" id="chips"></div>
 </div></header>
 <nav><div class="wrap">
-  <a href="#stay">🏨 宿</a><a href="#plan">🗓 日程</a><a href="#flight">✈ 飛行機</a><a href="#access">🚃 空港から</a><a href="#links">🔗 リンク</a><a href="guide.html">🍜 ごはん・観光</a>
+  <a href="#stay">🏨 宿</a><a href="#food">🍜 ごはん</a><a href="#sight">⛄ 観光</a><a href="#plan">🗓 日程</a><a href="#flight">✈ 飛行機</a><a href="#access">🚃 空港から</a><a href="#links">🔗 リンク</a>
 </div></nav>
 <main class="wrap">
   <section id="stay">
@@ -90,6 +90,15 @@ footer{padding:30px 16px 50px;color:var(--sub);font-size:12px;text-align:center}
     <div class="tbl" id="table" hidden></div>
     <p class="small" id="taxNote"></p>
   </section>
+  <section id="food">
+    <h2>🍜 ごはんと ⛄ 観光 <small id="spotChecked"></small></h2>
+    <div class="note" id="spotNote"></div>
+    <div class="tools" id="filters"><button data-k="all" class="on">すべて</button><button data-k="food">🍜 ごはん</button><button data-k="sight">⛄ 観光</button><button data-k="hotel">宿も表示</button></div>
+    <div class="map" id="gmap"></div>
+    <p class="small" style="margin-top:-8px">橙＝ごはん、緑＝観光、灰＝宿の候補。カードを押すと地図がその場所へ動きます。</p>
+    <h3 style="margin:18px 0 10px">🍜 ごはん</h3><div class="grid" id="foodCards"></div>
+  </section>
+  <section id="sight"><h3 style="margin:0 0 10px;font-size:20px">⛄ 観光 <small class="small">冬（1 月）に行けるもの</small></h3><div class="grid" id="sightCards"></div></section>
   <section id="plan"><h2>日程 <small>決まったら足していきます</small></h2><div id="days"></div></section>
   <section id="flight"><h2>飛行機</h2><div class="flight" id="flights"></div><p class="small" id="flightNote"></p></section>
   <section id="access"><h2>空港から街へ</h2><div id="accs"></div></section>
@@ -162,6 +171,43 @@ $("#flightNote").textContent = TRIP.flight_note;
 $("#accs").innerHTML = TRIP.access.map(a=>`<div class="acc"><b>${esc(a.name)}</b> <span class="small">${esc(a.route)}</span><div class="row"><span>⏱ ${esc(a.time)}</span><span>💴 ${esc(a.fare)}</span></div><div class="small">${esc(a.note)}　<a href="${esc(a.url)}" target="_blank" rel="noopener">公式 ↗</a></div></div>`).join("");
 $("#linkList").innerHTML = TRIP.links.map(l=>`<li><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.name)}</a></li>`).join("");
 $("#foot").textContent = "最終更新 " + TRIP.updated + "　値段・空きは予約サイトで最新を確かめてください";
+const SP = {"checked_at": "2026-11-27", "note": "時間・料金は 11/27 に各店・施設の公式などで確かめたもの。旅行までに変わることがあるので、行く前に公式を見てください。", "spots": [{"cat": "food", "name": "成吉思汗だるま 本店（ジンギスカン）", "lat": 43.054273, "lng": 141.352895, "what": "昭和 29 年からのすすきのの老舗。カウンター 14 席で、夜は外に並ぶ", "when": "17:00〜翌 5:00（食べログ。公式は 7〜8 時は並びやすく、9 時前後は空きやすいと案内）", "where": "すすきの（南5条西4）", "src": "https://sapporo-jingisukan.info/main", "tip": "5 人なら分かれて座る覚悟で、遅めの時間に"}, {"cat": "food", "name": "サッポロビール園（ジンギスカン食べ放題）", "lat": 43.070894, "lng": 141.368838, "what": "赤レンガの建物でジンギスカン食べ放題。5 人の夜ごはん向き", "when": "店によって違う。ポプラ館は改装で 2027 年 1 月中旬〜下旬ごろまで休館", "where": "東区（札幌駅から車で約 10 分）", "src": "https://sapporo-bier-garten.jp/reserve", "tip": "予約推奨。旅行の日にどの館が開いているかは予約時に確認"}, {"cat": "food", "name": "すみれ 札幌すすきの店（味噌ラーメン）", "lat": 43.056791, "lng": 141.353945, "what": "札幌味噌ラーメンの代表格。濃いめのスープ", "when": "夜遅くまで（営業時間は公式と食べログで違うので要確認）", "where": "すすきの（南3条西3）", "src": "https://h098804.gorp.jp", "tip": ""}, {"cat": "food", "name": "元祖さっぽろラーメン横丁", "lat": 43.054633, "lng": 141.354333, "what": "細い路地にラーメン店が並ぶ。飲んだあとのシメに", "when": "店ごとに違う（深夜までの店が多い）", "where": "すすきの（南5条西3）", "src": "https://ganso-yokocho.com/guide", "tip": ""}, {"cat": "food", "name": "スープカレー GARAKU", "lat": 43.058396, "lng": 141.358971, "what": "札幌のスープカレーの人気店", "when": "11:30〜15:30、17:00〜21:00（スープがなくなり次第終了）", "where": "狸小路の東（南2条西2）", "src": "https://s-garaku.com/shoplist.php", "tip": "昼どきは並ぶ"}, {"cat": "food", "name": "Suage+（スープカレー）", "lat": 43.055225, "lng": 141.35099, "what": "串に刺した具を素揚げにしたスープカレー", "when": "昼〜夜（曜日で違う。公式の X で確認）", "where": "すすきの北（南4条西5）", "src": "https://x.com/_suage", "tip": ""}, {"cat": "food", "name": "二条市場（海鮮丼）", "lat": 43.058247, "lng": 141.35846, "what": "130 年近く続く市場。海鮮丼の店が朝 7 時から開く", "when": "朝 7 時ごろ〜17 時ごろ（店で違う。年中無休）", "where": "大通の東（南3条東1〜2）", "src": "https://nijomarket.com/about/", "tip": "1/15 は 8:20 着なので、着いたらそのまま朝ごはんにできる"}, {"cat": "food", "name": "根室花まる JRタワーステラプレイス店（回転寿司）", "lat": 43.068046, "lng": 141.350991, "what": "北海道の人気回転寿司。札幌駅の上", "when": "11:00〜22:00（食べログ）", "where": "札幌駅（ステラプレイス 6 階）", "src": "https://www.sushi-hanamaru.com/store/details/s03.html", "tip": "待ちが長いので、アプリで受付すると楽。1/17 の帰る前にも"}, {"cat": "food", "name": "パフェ、珈琲、酒、佐藤（シメパフェ）", "lat": 43.05921, "lng": 141.355358, "what": "札幌の「シメパフェ」の代表の店。飲んだあとに", "when": "13:00〜24:00（金・土・祝前は 25:00 まで）。予約不可", "where": "大通の南", "src": "https://sapporo-parfait.com/shop-parfait-sato", "tip": ""}, {"cat": "sight", "name": "中島公園のホワイトイルミネーション（芸術祭と連携）", "lat": 43.043928, "lng": 141.354198, "what": "冬のイルミネーションに芸術祭が演出で参加。無料", "when": "2027/1/9〜1/28", "where": "中島公園（すすきのの南）", "src": "https://siaf.jp/event/28842", "tip": "中島公園の近くの宿なら、夜に歩いて行ける"}, {"cat": "sight", "name": "札幌国際芸術祭 2027（大通・近代美術館など）", "lat": 43.060069, "lng": 141.330425, "what": "1/16 が初日。テーマは「雪の惑星」。市内 11 会場（大通地下の 500m美術館、近代美術館、資料館、モエレ沼公園など）", "when": "2027/1/16〜2/21", "where": "市内 11 会場（地図は北海道立近代美術館）", "src": "https://siaf.jp/2027/venue", "tip": ""}, {"cat": "sight", "name": "モエレ沼公園（ガラスのピラミッド）", "lat": 43.122028, "lng": 141.428547, "what": "イサム・ノグチ設計の公園。冬は一面の雪原。芸術祭の会場の 1 つ", "when": "ピラミッドは 9:00〜17:00、月曜休館", "where": "東区（中心から車で約 30 分）", "src": "https://moerenumapark.jp/", "tip": ""}, {"cat": "sight", "name": "藻岩山（ロープウェイで夜景）", "lat": 43.031607, "lng": 141.333097, "what": "山頂から札幌の夜景。市電の「ロープウェイ入口」から無料シャトルバス", "when": "冬（12〜3 月）11:00〜22:00、上りの最終 21:30", "where": "南区（山麓駅）", "src": "https://mt-moiwa.jp/guide", "tip": "土曜の夜は混む"}, {"cat": "sight", "name": "JRタワー展望室 T38", "lat": 43.068199, "lng": 141.352587, "what": "札幌駅の上、地上 160m の展望室。夜景も", "when": "10:00〜22:00", "where": "札幌駅", "src": "https://sapporo.travel/spot/facility/jr-tower-observation-deck-t38", "tip": "帰る日の空港へ行く前に寄りやすい"}, {"cat": "sight", "name": "さっぽろテレビ塔", "lat": 43.061113, "lng": 141.356448, "what": "大通公園の東の端。展望台から大通を見下ろす", "when": "9:00〜22:00（最終入場 21:50）", "where": "大通", "src": "https://www.tv-tower.co.jp/", "tip": ""}, {"cat": "sight", "name": "札幌市時計台", "lat": 43.062554, "lng": 141.353645, "what": "明治 11 年の建物。中は資料館", "when": "日中（入館時間は公式で）", "where": "大通の北", "src": "https://sapporoshi-tokeidai.jp/inspect/guide.php", "tip": ""}, {"cat": "sight", "name": "北海道神宮", "lat": 43.056803, "lng": 141.309563, "what": "円山公園の森の中の神社。雪の参道がきれい", "when": "冬（11〜2 月）は 7:00〜16:00（案内サイト）", "where": "円山（地下鉄 円山公園駅から歩く）", "src": "http://www.hokkaidojingu.or.jp/", "tip": "閉門が早いので明るいうちに"}, {"cat": "sight", "name": "大倉山展望台", "lat": 43.051508, "lng": 141.289872, "what": "ジャンプ台の頂上までリフトで上がり、ジャンパーの目線で街を見下ろす", "when": "競技の日は展望台に入れないことがある", "where": "中央区宮の森", "src": "https://okurayama-jump.jp/", "tip": "行く日に公式で営業を確認"}, {"cat": "sight", "name": "白い恋人パーク", "lat": 43.08869, "lng": 141.27168, "what": "「白い恋人」の工場とお菓子のテーマパーク", "when": "10:00〜18:00（12〜3 月は一部 19:00 まで）", "where": "西区（地下鉄 宮の沢駅から歩く）", "src": "https://www.shiroikoibitopark.jp/", "tip": ""}, {"cat": "sight", "name": "小樽（運河）", "lat": 43.202023, "lng": 141.0006, "what": "運河と石造りの倉庫の港町。寿司・海鮮も", "when": "札幌から JR 快速で最速 32 分・800 円", "where": "小樽市", "src": "https://otaru.cc/access", "tip": "1 日を小樽にあてる案も"}, {"cat": "sight", "name": "狸小路・すすきの", "lat": 43.057258, "lng": 141.352698, "what": "屋根つきの商店街と、その南の繁華街。夜ごはんとお土産", "when": "—", "where": "大通とすすきのの間", "src": "https://www.sapporo.travel/", "tip": "寒い日でも屋根の下を歩ける"}]};
+(()=>{
+  if(!SP) return;
+  const spots=SP.spots; spots.forEach((s,i)=>s.no=i+1);
+  $("#spotNote").textContent=SP.note; $("#spotChecked").textContent=`${SP.checked_at} 確認`;
+  const gm = s => `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`;
+  const sc = s => {
+    const kv=[["内容",s.what],["時間",s.when],["場所",s.where]].filter(([,v])=>v).map(([k,v])=>`<li><b>${k}</b>${esc(v)}</li>`).join("");
+    return `<article class="card" data-sno="${s.no}" style="cursor:pointer"><div class="no" style="background:${s.cat==="food"?"var(--warm)":"var(--ok)"}">${s.no}</div><h3>${esc(s.name)}</h3>
+    <ul class="kv">${kv}</ul>${s.tip?`<ul class="pc"><li class="p">${esc(s.tip)}</li></ul>`:""}
+    <div class="go"><a href="${esc(s.src)}" target="_blank" rel="noopener">公式など ↗</a>　<a href="${gm(s)}" target="_blank" rel="noopener">Google マップ ↗</a></div></article>`;
+  };
+  $("#foodCards").innerHTML=spots.filter(s=>s.cat==="food").map(sc).join("");
+  $("#sightCards").innerHTML=spots.filter(s=>s.cat==="sight").map(sc).join("");
+  if(!window.L) return;
+  const m=L.map("gmap",{scrollWheelZoom:false,fadeAnimation:false}).setView([43.06,141.35],13);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:"© OpenStreetMap"}).addTo(m);
+  const marks=spots.map(s=>{
+    const mk=L.marker([s.lat,s.lng],{icon:L.divIcon({className:"",html:`<div class="pin ${s.cat}">${s.no}</div>`,iconSize:[26,26],iconAnchor:[13,13]})})
+      .bindPopup(`<b>${s.no}. ${esc(s.name)}</b><br>${esc(s.when)}<br><a href="${gm(s)}" target="_blank" rel="noopener">Google マップ ↗</a>`);
+    mk.cat=s.cat; mk.no=s.no; mk.addTo(m); return mk;
+  });
+  const hl=L.layerGroup(hotels.filter(h=>h.lat).map(h=>L.marker([h.lat,h.lng],{icon:L.divIcon({className:"",html:'<div class="pin h"></div>',iconSize:[14,14],iconAnchor:[7,7]})}).bindTooltip(`${h.no}. ${esc(h.name)}`)));
+  const ctr=marks.filter(x=>{const p=x.getLatLng();return p.lat<43.075&&p.lat>43.04&&p.lng>141.32&&p.lng<141.37});
+  m.fitBounds(L.featureGroup(ctr).getBounds(),{padding:[30,30],animate:false});
+  document.querySelectorAll("#filters button").forEach(b=>b.onclick=()=>{
+    if(b.dataset.k==="hotel"){const on=!b.classList.contains("on");b.classList.toggle("on",on);on?hl.addTo(m):hl.remove();return;}
+    document.querySelectorAll("#filters button:not([data-k=hotel])").forEach(x=>x.classList.toggle("on",x===b));
+    marks.forEach(mk=>(b.dataset.k==="all"||mk.cat===b.dataset.k)?mk.addTo(m):mk.remove());
+  });
+  document.querySelectorAll(".card[data-sno]").forEach(c=>c.onclick=e=>{
+    if(e.target.closest("a")) return;
+    const mk=marks.find(x=>x.no==c.dataset.sno); if(!mk) return;
+    if(!m.hasLayer(mk)) mk.addTo(m);
+    m.setView(mk.getLatLng(),15); mk.openPopup(); $("#gmap").scrollIntoView({behavior:"smooth",block:"center"});
+  });
+})();
 </script>
 </body>
 </html>
